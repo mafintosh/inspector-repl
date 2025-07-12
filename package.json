@@ -2,7 +2,7 @@
   "name": "inspector-repl",
   "version": "1.0.0",
   "description": "quick and dirty devtools inspector repl",
-  "main": "index.js",
+  "main": "bin.js",
   "bin": {
     "inspector-repl": "bin.js"
   },
