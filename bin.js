@@ -1,16 +1,27 @@
 #!/usr/bin/env node
 
+const fs = require('fs')
+const path = require('path')
 const WS = require('ws')
+const b4a = require('b4a')
 
 const socket = new WS(process.argv[2])
+
+let heapdumpLocation = null
+let heapdumpMessageId = -1
 
 socket.on('message', function (data) {
   const m = JSON.parse(data)
   if (m.method === 'Console.messageAdded') {
     console.log(m.params.message.text)
-  }
-  if (!m.method && m.result) {
-    console.log(m.result.result?.value)
+  } else if (m.method === 'HeapProfiler.addHeapSnapshotChunk') {
+    fs.appendFileSync(heapdumpLocation, m.params.chunk)
+  } else if (!m.method && m.result) {
+    if (m.id === heapdumpMessageId) {
+      console.log(`Heapdump finished at ${heapdumpLocation}`)
+    } else {
+      console.log(m.result.result?.value)
+    }
   }
 })
 
@@ -20,9 +31,32 @@ socket.on('open', function () {
     method: 'Console.enable'
   }))
 
-  let id = 1
+  socket.send(JSON.stringify({
+    id: 1,
+    method: 'HeapProfiler.enable'
+  }))
+
+  let id = 2
 
   process.stdin.on('data', function (data) {
+    const cleanData = b4a.toString(data).trim()
+    if (cleanData.startsWith('heapdump')) {
+      heapdumpLocation = cleanData.split(' ')[1]
+      if (!heapdumpLocation) {
+        const timestamp = new Date(Date.now()).toISOString().split('.')[0].replaceAll(':', '-')
+        heapdumpLocation = `inspector-repl-${timestamp}.heapsnapshot`
+      }
+      heapdumpLocation = path.resolve(heapdumpLocation)
+      console.log(`Creating heapdump at ${heapdumpLocation}`)
+
+      heapdumpMessageId = id
+      socket.send(JSON.stringify({
+        id: id++,
+        method: 'HeapProfiler.takeHeapSnapshot',
+      }))
+
+      return
+    }
     socket.send(JSON.stringify({
       id: id++,
       method: 'Runtime.evaluate',
