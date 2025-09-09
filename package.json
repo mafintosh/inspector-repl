@@ -1,6 +1,6 @@
 {
   "name": "inspector-repl",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "quick and dirty devtools inspector repl",
   "main": "bin.js",
   "bin": {
