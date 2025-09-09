@@ -39,12 +39,17 @@ socket.on('open', function () {
   let id = 2
 
   process.stdin.on('data', function (data) {
-    if (b4a.toString(data).trim() === 'heapdump') {
-      const heapdumpId = new Date(Date.now()).toISOString().split('.')[0].replaceAll(':', '-')
-      heapdumpLocation = path.resolve(`inspector-repl-${heapdumpId}.heapsnapshot`)
-      heapdumpMessageId = id
+    const cleanData = b4a.toString(data).trim()
+    if (cleanData.startsWith('heapdump')) {
+      heapdumpLocation = cleanData.split(' ')[1]
+      if (!heapdumpLocation) {
+        const timestamp = new Date(Date.now()).toISOString().split('.')[0].replaceAll(':', '-')
+        heapdumpLocation = `inspector-repl-${timestamp}.heapsnapshot`
+      }
+      heapdumpLocation = path.resolve(heapdumpLocation)
       console.log(`Creating heapdump at ${heapdumpLocation}`)
 
+      heapdumpMessageId = id
       socket.send(JSON.stringify({
         id: id++,
         method: 'HeapProfiler.takeHeapSnapshot',

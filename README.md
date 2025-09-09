@@ -8,4 +8,5 @@ kill -SIGUSR1 pid
 inspector-repl ws://... # from above
 console.trace() # get trace
 heapdump # Get a heapdump out
+heapdump /my/location.heapdump # write a heapdump to the specified location
 ```
