@@ -7,6 +7,7 @@
     "inspector-repl": "bin.js"
   },
   "dependencies": {
+    "b4a": "^1.6.7",
     "ws": "^8.18.3"
   },
   "repository": {
